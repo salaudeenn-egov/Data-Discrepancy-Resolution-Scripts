@@ -24,6 +24,7 @@ Scripts to identify and fix data discrepancies between **PostgreSQL (DB)** and *
 | 5 | `5_bulk_create_tasks.py` | Bulk create tasks via API (Scenario A ingestion) |
 | 6 | `6_fetch_beneficiaries.py` | Fetch beneficiary objects from API (Scenario B) |
 | 7 | `7_bulk_update_tasks.py` | Bulk update tasks via API (Scenario B ingestion) |
+| 8 | `8_stock.py` | Stock audit — compare stock quantities between DB and Elastic |
 
 ---
 
@@ -102,6 +103,68 @@ curl --location 'https://<campaign>-hcm.digit.org/user/oauth/token' \
 
 ---
 
+### Script 8 — Stock Audit (Standalone)
+
+**Goal:** Compare `stock` table in DB against `stock-index-v1` in Elasticsearch to find quantity mismatches, records missing in ES, and records missing in DB.
+
+All credentials and identifiers are read from **environment variables** — no values are hardcoded. Set the following before running:
+
+| Variable | Description |
+|----------|-------------|
+| `DB_HOST` | PostgreSQL host (IP or hostname) |
+| `DB_PORT` | PostgreSQL port (default: `5432`) |
+| `DB_NAME` | Database name |
+| `DB_USER` | Database user |
+| `DB_PASSWORD` | Database password |
+| `DB_SSLMODE` | SSL mode (default: `require`) |
+| `ELASTIC_BASE_URL` | Elasticsearch base URL (e.g. `https://host:9200`) |
+| `ELASTIC_INDEX` | Elasticsearch index name (default: `stock-index-v1`) |
+| `ELASTIC_USERNAME` | Elasticsearch username |
+| `ELASTIC_PASSWORD` | Elasticsearch password |
+| `PROJECT_TYPE_ID` | Project type UUID to filter by |
+| `PROJECT_HIERARCHY_PREFIX` | Project hierarchy prefix to filter by (without trailing `%`) |
+
+**Set env vars and run (Linux/macOS):**
+```bash
+export DB_HOST=<host>
+export DB_NAME=<db>
+export DB_USER=<user>
+export DB_PASSWORD=<password>
+export ELASTIC_BASE_URL=https://<host>:9200
+export ELASTIC_USERNAME=<user>
+export ELASTIC_PASSWORD=<password>
+export PROJECT_TYPE_ID=<uuid>
+export PROJECT_HIERARCHY_PREFIX=<hierarchy-prefix>
+python 8_stock.py
+```
+
+**Set env vars and run (Windows PowerShell):**
+```powershell
+$env:DB_HOST="<host>"
+$env:DB_NAME="<db>"
+$env:DB_USER="<user>"
+$env:DB_PASSWORD="<password>"
+$env:ELASTIC_BASE_URL="https://<host>:9200"
+$env:ELASTIC_USERNAME="<user>"
+$env:ELASTIC_PASSWORD="<password>"
+$env:PROJECT_TYPE_ID="<uuid>"
+$env:PROJECT_HIERARCHY_PREFIX="<hierarchy-prefix>"
+python 8_stock.py
+```
+
+**Output files** (written to `nampula_stock/` folder):
+
+| File | Contents |
+|------|----------|
+| `summary_*.csv` | Counts overview |
+| `missing_in_es_*.csv` | clientReferenceIds in DB but not in ES |
+| `missing_in_db_*.csv` | clientReferenceIds in ES but not in DB |
+| `quantity_mismatch_*.csv` | Records where DB quantity ≠ ES physicalCount |
+| `db_details_missing_in_es_*.csv` | Full DB rows for records missing in ES |
+| `es_details_missing_in_db_*.csv` | Full ES documents for records missing in DB |
+
+---
+
 ## Retrying Failed Records
 
 Both `5_bulk_create_tasks.py` and `7_bulk_update_tasks.py` save failures to `failed_tasks.json`.
@@ -143,7 +206,12 @@ After ingestion:
 |-----------|----------------|
 | DB Host/Port | PG Admin → Server → Properties → Connection |
 | DB User/Password | TST Checklist (read-only user) |
-| Elastic credentials | TST Checklist → Base64 encode online |
+| Elastic credentials | TST Checklist |
 | Auth Token | OAuth cURL above |
 | Campaign index | TST Checklist / DevOps |
 | Tenant ID | Campaign config (e.g. `ko`, `bo`, `oy`) |
+| `PROJECT_TYPE_ID` | TST Checklist / campaign config |
+| `PROJECT_HIERARCHY_PREFIX` | TST Checklist / campaign boundary hierarchy |
+
+> **Security note:** Scripts 1–7 use inline placeholder variables (fill before running, do not commit filled values).
+> Script 8 (`8_stock.py`) reads all credentials exclusively from environment variables — never hardcode values into the file.
