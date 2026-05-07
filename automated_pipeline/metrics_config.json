@@ -1,0 +1,103 @@
+{
+  "Population Covered (Dose 01)": {
+    "type": "task",
+    "db_query_template": "SELECT {db_id_column} FROM {db_table} pt JOIN {project_table} p ON pt.projectid = p.id WHERE pt.status = '{status}' AND EXISTS ( SELECT 1 FROM jsonb_array_elements(pt.additionaldetails->'fields') f WHERE f->>'key' = 'doseIndex' AND f->>'value' = '{dose}' ) AND p.projecttypeid = '{projectTypeId}' AND p.projecthierarchy ILIKE '{projectHierarchy}' AND pt.isdeleted = false",
+    "params": {
+      "status": "ADMINISTRATION_SUCCESS",
+      "dose": "01"
+    },
+    "es_query_body": {
+      "query": {
+        "bool": {
+          "filter": [
+            {"term": {"Data.administrationStatus.keyword": "{status}"}},
+            {"term": {"Data.additionalDetails.doseIndex.keyword": "{dose}"}},
+            {"term": {"Data.projectTypeId.keyword": "{projectTypeId}"}},
+            {"term": {"Data.boundaryHierarchy.province.keyword": "{province}"}}
+          ]
+        }
+      }
+    }
+  },
+
+  "Population Covered (Dose 02)": {
+    "type": "task",
+    "db_query_template": "SELECT {db_id_column} FROM {db_table} pt JOIN {project_table} p ON pt.projectid = p.id WHERE pt.status = '{status}' AND EXISTS ( SELECT 1 FROM jsonb_array_elements(pt.additionaldetails->'fields') f WHERE f->>'key' = 'doseIndex' AND f->>'value' = '{dose}' ) AND p.projecttypeid = '{projectTypeId}' AND p.projecthierarchy ILIKE '{projectHierarchy}' AND pt.isdeleted = false",
+    "params": {
+      "status": "ADMINISTRATION_SUCCESS",
+      "dose": "02"
+    },
+    "es_query_body": {
+      "query": {
+        "bool": {
+          "filter": [
+            {"term": {"Data.administrationStatus.keyword": "{status}"}},
+            {"term": {"Data.additionalDetails.doseIndex.keyword": "{dose}"}},
+            {"term": {"Data.projectTypeId.keyword": "{projectTypeId}"}},
+            {"term": {"Data.boundaryHierarchy.province.keyword": "{province}"}}
+          ]
+        }
+      }
+    }
+  },
+
+  "Beneficiary Covered": {
+    "type": "task",
+    "db_query_template": "SELECT {db_id_column} FROM {db_table} pt WHERE pt.status IN ({status_list}) AND pt.isdeleted = false",
+    "params": {
+      "status_list": "'ADMINISTRATION_SUCCESS','VISITED'"
+    },
+    "es_query_body": {
+      "query": {
+        "bool": {
+          "filter": [
+            {"terms": {"Data.administrationStatus.keyword": ["ADMINISTRATION_SUCCESS", "VISITED"]}},
+            {"term": {"Data.projectTypeId.keyword": "{projectTypeId}"}},
+            {"term": {"Data.boundaryHierarchy.province.keyword": "{province}"}}
+          ]
+        }
+      }
+    }
+  },
+
+  "Number of Deliveries": {
+    "type": "task",
+    "db_query_template": "SELECT {db_id_column} FROM {db_table} pt WHERE pt.status = '{status}' AND pt.isdeleted = false",
+    "params": {
+      "status": "ADMINISTRATION_SUCCESS"
+    },
+    "es_query_body": {
+      "query": {
+        "bool": {
+          "filter": [
+            {"term": {"Data.administrationStatus.keyword": "{status}"}},
+            {"term": {"Data.projectTypeId.keyword": "{projectTypeId}"}},
+            {"term": {"Data.boundaryHierarchy.province.keyword": "{province}"}}
+          ]
+        }
+      }
+    }
+  },
+
+  "Stock Received (Quantity)": {
+    "type": "stock",
+    "db_query_template": "SELECT s.clientreferenceid, s.quantity FROM {stock_table} s JOIN {facility_table} f ON s.receiverid = f.id JOIN {project_table} p ON s.referenceid = p.id WHERE s.transactiontype = '{transactionType}' AND f.usage = '{facilityType}' AND p.projecttypeid = '{projectTypeId}' AND p.projecthierarchy ILIKE '{projectHierarchy}' AND s.isdeleted = false",
+    "params": {
+      "transactionType": "RECEIVED",
+      "facilityType": "Health Facility"
+    },
+    "es_query_body": {
+      "query": {
+        "bool": {
+          "filter": [
+            {"term": {"Data.eventType.keyword": "{transactionType}"}},
+            {"term": {"Data.facilityType.keyword": "{facilityType}"}},
+            {"term": {"Data.additionalDetails.projectTypeId.keyword": "{projectTypeId}"}},
+            {"term": {"Data.boundaryHierarchy.province.keyword": "{province}"}}
+          ]
+        }
+      }
+    },
+    "comparison": "quantity"
+  }
+}

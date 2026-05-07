@@ -1,0 +1,55 @@
+{
+  "_globals": {
+    "db_host": "",
+    "db_port": "",
+    "db_name": "",
+    "db_user": "",
+    "db_pass": "",
+    "es_base_url": "https://elasticsearch-data.es-cluster-v8:9200",
+    "es_username": "",
+    "api_paths": {
+      "task_create":        "/project/task/v1/bulk/_create",
+      "task_update":        "/project/task/v1/bulk/_update",
+      "task_search":        "/project/task/v1/_search",
+      "beneficiary_search": "/project/beneficiary/v1/_search",
+      "stock_create":       "/stock/v1/bulk/_create",
+      "stock_update":       "/stock/v1/bulk/_update"
+    }
+  },
+
+  "salma_moz": {
+    "label":            "SALMA Mozambique",
+    "tenant_id":        "mz",
+    "api_base":         "https://mozambique-hcm.digit.org",
+    "es_password":      "",
+    "auth_token":       "",
+
+    "projectTypeId":    "sl27mc26-0696-4ce2-b3a3-30bd059f022e",
+    "projectHierarchy": "fcedd53e-726f-4f58-8bdc-477d39921590.2b50ab65-2050-483f-8765-9e0eff30341a%",
+    "province":         "Nampula",
+
+    "task": {
+      "db_table":      "project_task",
+      "project_table": "project",
+      "es_index":      "project-task-index-v1",
+      "db_id_column":  "clientreferenceid",
+      "es_id_field":   "Data.taskClientReferenceId"
+    },
+
+    "stock": {
+      "db_table":       "stock",
+      "facility_table": "facility",
+      "project_table":  "project",
+      "es_index":       "stock-index-v1",
+      "db_id_column":   "clientreferenceid",
+      "es_id_field":    "Data.clientReferenceId"
+    },
+
+    "test_user_config": {
+      "db_individual_table":        "individual",
+      "db_individual_name_col":     "username",
+      "db_test_name_patterns":      ["test", "demo"],
+      "es_test_createdby_prefixes": ["test", "demo"]
+    }
+  }
+}
